@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.ConfigDAO">
+	<select id="queryByCity" parameterType="string" resultMap="configResultMap">
+	    SELECT * FROM `config` WHERE `city`=#{city}
+	</select>
+	
+	<update id="updateByCity" parameterType="Config">
+	   	update `config`
+	   	<set>
+			<if test="business_pictures!=null">`business_pictures`=#{business_pictures},</if>
+			<if test="business_title!=null">`business_title`=#{business_title},</if>
+			<if test="business_link!=null">`business_link`=#{business_link},</if>
+			<if test="business_target!=null">`business_target`=#{business_target},</if>
+			<if test="stick_activity!=null">`stick_activity`=#{stick_activity},</if>
+			<if test="no_thirdpart_version!=null">`no_thirdpart_version`=#{no_thirdpart_version},</if>
+			<if test="white_list!=null">`white_list`=#{white_list}</if>
+		</set>
+		 where `city`=#{city}
+	    
+	</update>
+	<resultMap type="Config" id="configResultMap"></resultMap>
+	
+	<select id="queryCitys" parameterType="boolean" resultMap="cityResultMap">
+	    SELECT * FROM `city` 
+	    WHERE `level`='city'
+	    <if test="isHot == true"> AND `is_hot`='yes'</if>;
+	</select>
+	
+	<select id="queryCityByName" resultMap="cityResultMap">
+	    SELECT * FROM `city` 
+	    WHERE `name`=#{name};
+	</select>
+	
+	<resultMap type="City" id="cityResultMap"></resultMap>
+	
+</mapper>

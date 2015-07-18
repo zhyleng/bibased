@@ -1,0 +1,427 @@
+/* 初始化 */
+
+body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,legend,button
+form,fieldset,input,textarea,p,blockquote,th,td {
+	padding: 0;
+	margin: 0;
+}
+
+body {
+　　　　font: normal 100% Helvetica, arial,sans-serif;
+	max-width:640px;
+	margin-left: auto;
+	margin-right: auto;
+　　}
+
+/* 头部用户信息*/
+.head{
+	width: 100%;
+}
+
+.shareheadportrait{
+	width:20%;
+	float:left;
+}
+
+.shareheadportrait img{
+	width: 67%;
+	margin-left: 12%;
+	margin-top: 30%;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	border-radius: 15px;
+}
+
+.share{
+	width: 77%;
+	float: left;
+	padding-top: 6%;
+	padding-left: 3%;
+}
+
+.shareprofile{
+	color: #646464;
+	width:100%;
+}
+
+.shareprofile img{
+	width: 5%;
+}
+
+.gender{
+	margin-left: 8%;
+}
+.shareinfo{
+	width:100%;
+	font-size: 1em;
+	color: #a5a5a5;
+	padding-top: 3%;
+}
+
+.activityinfo span{
+	margin-right: 10%;
+}
+
+
+/*  活动信息 */
+.activity{
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	clear: left;
+	padding-top: 25px;
+}
+
+.activity_info ,.activity_content{
+	width: 100%;
+}
+
+.activity_headportrait{
+	width: 8%;
+	float: left;
+}
+
+.activity_headportrait img{
+	width: 100%;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.activity_title{
+	width: 75%;
+	margin-left: 5%;
+	float: left;
+}
+
+.activity_media img,video{
+	clear: left;
+	width: 100%;
+}
+
+.activity_time{
+	padding-top: 15px;
+	width:100%;
+	color: #3c3c3c;
+}
+.icon_activity img{
+	width:15px;
+}
+.activity_place{
+	padding-top: 8px;
+	color: #3c3c3c;
+}
+
+.activity_invite{
+	padding-top: 8px;
+	margin-left:20px;
+	padding-bottom:20px;
+	color: #3c3c3c;
+}
+
+.activity_content{
+	color: #3c3c3c;
+	margin-top: 5px;
+}
+
+.btn{
+	margin-top:45px;
+	margin-bottom:45px;
+	text-align:center;
+	float:left;
+	width:50%;
+}
+
+.btn img{
+	width:60%;
+	max-width:187px;
+	min-width:100px;
+}
+
+/*评论*/
+
+.activity_comment{
+	width: 95%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	color: #999;
+}
+
+.person_num{
+	width: 50%;
+	float: left;
+}
+.comment_num{
+	width: 50%;
+	float: right;
+	text-align: right;
+	margin-bottom: 10px;
+}
+
+hr{
+	clear: left;
+	clear: right;
+	width: 100%;
+	border:0; height:1px; background-color:#d4d4d4;
+	color:#d4d4d4	/* IE6 */
+}
+
+.comments{
+	width: 90%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-bottom:60px;
+}
+
+.comments img{
+	width: 100%;
+	-moz-border-radius: 15px;
+	-webkit-border-radius: 15px;
+	border-radius: 15px;
+}
+
+.comment{
+	clear: left;
+	width: 100%;
+}
+
+.comment_portrait{
+	width: 15%;
+	float: left;
+}
+.comment_content{
+	width: 80%;
+	margin-left: 5%;
+	float: left;
+}
+
+.comment_name,.comment_msg{
+	width: 100%;
+	font-size: 0.35em;
+}
+
+.comment_name{
+	color: #000;
+	height: 100%;
+	margin-bottom: 5px;
+	font-size:0.9em;
+}
+
+.comment_msg{
+	font-size: 0.8em;
+}
+
+.cnzz{
+	width:100%;
+	text-align: center;
+}
+
+/*下载*/
+
+.footer{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 60px;
+	width: 100%;
+}
+
+.logo{
+	width: 10%;
+	height: 100%;
+	margin-left: 5%;
+	margin-top: 7px;
+	float: left;
+}
+
+.logo img{
+	height: 76%;
+}
+
+.slogan{
+	width: 55%;
+	height: 100%;
+	margin-top: 10px;
+	text-align: center;
+	color: #fff;
+	font-size: 0.8em;
+	float: left;
+}
+.download{
+	width: 20%;
+	height: 100%;
+	text-align: right;
+	margin-top: 10px;
+	margin-right:5%;
+	float: left;
+}
+.download img{
+	height: 41px;
+}
+
+.app_name{
+	color: #34dbaf;
+	font-size: 1.5em;
+}
+
+
+/*下载引导页*/
+/*.guid{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 100%;
+	width: 100%;
+}
+
+.guid_arrow{
+	width:80%;
+	margin-top:5px;
+	text-align:right;
+}
+
+.guid_content{
+	margin-top:15px;
+	margin-left:30%;
+	width:70%;
+	font-size:1.3em;
+	color:#fff;
+}
+.guid_content li{
+	margin-top:10px;
+}
+
+ul{
+	list-style:none;
+}*/
+
+.guid{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 100%;
+	width: 100%;
+}
+
+.guid img{
+	width: 100%;
+}
+
+/*第三方登陆*/
+.thirdpartLogin{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 60px;
+	width: 100%;
+	text-align:center;
+	color:#fff;
+	line-height:60px;
+	display: table-cell;
+    vertical-align:middle;
+}
+
+.thirdpartLogin img{
+	max-width:40px;
+	width:5%;
+	min-width:25px;
+	vertical-align:middle;
+}
+.thirdpartLogin div{
+	float: left;
+}
+.thirdpartLogin_item_qq ,.thirdpartLogin_item_sina,.thirdpartLogin_item_mobile{
+	height: 60px;
+	/*width: 48%;*/
+	/*width: 33%;*/
+	width: 48%;
+}
+
+.activity_siginup,.activity_comment_box,.mobile_num,.login-pwd{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 140px;
+	width: 100%;
+	text-align:center;
+	color:#fff;
+	line-height:60px;
+	display: table-cell;
+    vertical-align:middle;
+}
+
+.activity_siginup input ,.activity_comment_box input,.mobile_num input,.pwd_enter input,.login-pwd input{
+	width:85%;
+	font-size:1em;
+}
+.activity_siginup_enterMsg ,.activity_comment_enterMsg,.mobile_num_enter,.login_enter{
+	height:75px;
+	border-bottom:1px solid #d4d4d4;
+}
+.activity_siginup_btn,.activity_comment_btn,.mobile_num_enter_btnm,.login_btn{
+	width:100%;
+	height:65px;
+}
+.activity_siginup_btn div ,.activity_comment_btn div,.mobile_num_enter_btn div,.pwd_btn div,.login_btn div{
+	width:48%;
+	text-align:center;
+	float:left;
+}
+.activity_siginup_confirm ,.activity_comment_confirm,.mobile_code_confirm,.mobile_num_confirm,.login_confirm,.pwd_confirm{
+	border-left:1px solid #d4d4d4;
+}
+
+/*提示框*/
+.tips{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	width: 100%;
+	text-align:center;
+	color:#fff;
+	line-height:60px;
+	display: table-cell;
+    vertical-align:middle;
+    text-align:center;
+}
+
+/*密码*/
+.pwd{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 300;
+	background: rgba(0,0,0,.8);
+	height: 215px;
+	width: 100%;
+	text-align:center;
+	color:#fff;
+	line-height:60px;
+	display: table-cell;
+    vertical-align:middle;
+}
+
+.pwd_enter{
+	height:150px;
+	border-bottom:1px solid #d4d4d4;
+}

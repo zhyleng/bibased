@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.ClientVersionInfoDAO">
+	<select id="query" resultMap="clientVersionInfoResultMap">
+	    SELECT * FROM `version` WHERE `id`=0
+	</select>
+	
+	<update id="update" parameterType="ClientVersionInfoDO">
+	   	update `version`
+	   	<set>
+			<if test="ios_current_version!=null">`ios_current_version`=#{ios_current_version},</if>
+			<if test="android_current_version!=null">`android_current_version`=#{android_current_version},</if>
+			<if test="ios_download_url!=null">`ios_download_url`=#{ios_download_url},</if>
+			<if test="android_download_url!=null">`android_download_url`=#{android_download_url},</if>
+			<if test="ios_version_explain!=null">`ios_version_explain`=#{ios_version_explain},</if>
+			<if test="android_version_explain!=null">`android_version_explain`=#{android_version_explain},</if>
+			<if test="ios_min_available_version!=null">`ios_min_available_version`=#{ios_min_available_version},</if>
+			<if test="android_min_available_version!=null">`android_min_available_version`=#{android_min_available_version}</if>
+		</set>
+		 where `id`=#{id}
+	</update>
+	
+	<resultMap type="ClientVersionInfoDO" id="clientVersionInfoResultMap">
+	</resultMap>
+</mapper>

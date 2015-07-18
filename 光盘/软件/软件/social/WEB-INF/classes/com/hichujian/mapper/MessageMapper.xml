@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.MessageDAO">
+    <cache />
+    
+	<insert id="insertMessage" parameterType="MessageDO" useGeneratedKeys="true" keyProperty="chattingID">
+		INSERT INTO `message` (`senderID`, `receiverID`, `chatting_send_time`, `chatting_status`, `chatting_content`, `chatting_contentType`)
+		VALUES (#{senderID}, #{receiverID}, #{chattingSendTime}, #{chattingStatus}, #{chattingContent}, #{chattingContentType})
+	</insert>
+	
+	<update id="updateStatusById" >
+		UPDATE `message` SET chatting_status=#{status} WHERE chattingID=#{chattingID}
+	</update>
+	
+	<select id="queryStatusById" parameterType="_long" resultType="int">
+		SELECT chatting_status FROM `message` WHERE chattingID=#{chattingID}
+	</select>
+	<select id="queryUserId" parameterType="_long" resultType="_long">
+		SELECT senderID FROM `message` WHERE chattingID=#{chattingID}
+	</select>
+	
+	
+	<select id="queryBySenderIdAndOffset" resultMap="messageResultMap">
+		SELECT * FROM `message` 
+		WHERE  senderID=#{senderID}  AND chatting_status=1 
+		ORDER BY chatting_send_time DESC 
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<select id="queryByUserId"  resultMap="messageResultMap">
+		SELECT * FROM `message` 
+		WHERE  ((senderID=#{userID} AND receiverID=#{anotherUserID}) 
+		OR (receiverID=#{userID} AND senderID=#{anotherUserID})) 
+		AND chatting_status=#{status} 
+		<if test="beforeTime!=null"> AND chatting_send_time &lt; #{beforeTime} </if>
+		
+		ORDER BY chatting_send_time DESC 
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<resultMap id="messageResultMap" type="MessageDO">
+		<id column="chattingID" property="chattingID" />
+		<result column="senderID" property="senderID" />
+		<result column="receiverID" property="receiverID" />
+		<result column="chatting_send_time" property="chattingSendTime" />
+		<result column="chatting_status" property="chattingStatus" />
+		<result column="chatting_content" property="chattingContent" />
+		<result column="chatting_contentType" property="chattingContentType" />
+	</resultMap>
+	
+</mapper>

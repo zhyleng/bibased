@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.PushDAO">
+	<!-- 
+	<cache eviction="LRU" />
+	 -->
+	<insert id="insert" parameterType="PushDO" useGeneratedKeys="true" keyProperty="pushID">
+		INSERT INTO `push_records` (`push_notify`, `push_time`, `push_type`, `push_content`, `device_type`, `receiver_userID`)
+		 VALUES (#{pushNotify}, 
+		 <choose>
+		 	<when test="pushTime!=null">#{pushTime}</when>
+		 	<otherwise>SYSDATE()</otherwise>
+		 </choose>, #{pushType}, #{pushContent}, #{deviceType}, #{receiverUserID})
+	</insert>
+	
+	<delete id="delete" parameterType="_long">
+		DELETE FROM `push_records` WHERE pushID=#{pushID}
+	</delete>
+	
+	<update id="updateStatusById"> 
+		UPDATE `push_records` SET status=#{status} WHERE `pushID`=#{pushID}
+	</update>
+	
+	<update id="updateStatusByIds"> 
+		UPDATE `push_records` SET status=#{status} 
+		WHERE `receiver_userID` = #{userID}
+		AND	`pushID` IN <foreach collection="pushIds" item="pushID" open="(" separator="," close=")" >#{pushID}</foreach>
+	</update>
+	
+	<select id="queryById" parameterType="_long" resultMap="pushResultMap">
+		SELECT * FROM `push_records` WHERE pushID=#{pushID}
+	</select>
+	<select id="queryByStatus" parameterType="_int" resultMap="pushResultMap">
+		SELECT `pushID`,`push_time`, `push_type`, `push_content`, `receiver_userID`, `device_type`, `push_notify` FROM `push_records` WHERE `status` = #{status}
+		ORDER BY `push_time`
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<!-- 查询近十四天的记录 -->
+	<!-- 且未拉取成功的记录（status不为10） -->
+	<select id="queryByReceiverUserId" resultMap="pushResultMap">
+		SELECT `pushID`,`push_time`, `push_type`, `push_content`, `receiver_userID` FROM `push_records` 
+		WHERE receiver_userID=#{receiverUserID} 
+		AND `status` != 10
+		AND  `push_time` &gt; SUBDATE(SYSDATE(),INTERVAL 14 DAY)
+		<if test="pushType!=0"> AND `push_type`=#{pushType} </if>
+		<if test="beforeTime!=null"> AND push_time &lt; #{beforeTime}</if>
+		ORDER BY push_time DESC
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<resultMap id="pushResultMap" type="PushDO">
+		<result column="pushID" property="pushID"/>
+		<result column="push_notify" property="pushNotify"/>
+		<result column="push_time" property="pushTime"/>
+		<result column="push_type" property="pushType"/>
+		<result column="push_content" property="pushContent"/>
+		<result column="device_type" property="deviceType"/>
+		<result column="status" property="status"/>
+		<result column="receiver_userID" property="receiverUserID"/>
+	</resultMap>
+</mapper>

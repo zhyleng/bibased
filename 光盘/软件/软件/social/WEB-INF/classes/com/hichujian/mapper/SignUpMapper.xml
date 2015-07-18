@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.SignUpDAO">
+    <cache />
+    
+	<insert id="insert" parameterType="SignUpDO" >
+		INSERT INTO `sign_up` (`sign_uperID`, `activityID`, `receive_status`, `sign_up_time`, `sign_up_info`) 
+		VALUES (#{signUperID}, #{activityID}, #{receiveStatus}, SYSDATE(), #{signUpInfo})
+	</insert>
+	
+	<delete id="delete">
+		DELETE FROM `sign_up` WHERE sign_uperID=#{signUperID} AND activityID=#{activityID}
+	</delete>
+	
+	<update id="updateReceiveStatus">
+		UPDATE `sign_up` SET receive_status=#{status} WHERE  sign_uperID=#{signUperID} AND activityID=#{activityID}
+	</update>
+	
+	<select id="querySignUpNumber" parameterType="_long">
+		SELECT COUNT(activityID) FROM `sign_up` WHERE activityID=#{activityID}
+	</select>
+	
+	<select id="queryIsSignUped" resultType="boolean">
+		SELECT COUNT(sign_uperID) FROM `sign_up` WHERE sign_uperID=#{signUperID} AND activityID=#{activityID}
+	</select>
+	
+	<select id="querySignUpInfo" resultMap="signUpResultMap">
+		SELECT `sign_uperID`,`activityID`,`sign_up_time`,`sign_up_info` FROM `sign_up` 
+		WHERE activityID=#{activityID} AND sign_uperID=#{signUperID}
+	</select>
+	
+	<select id="queryBySignUperId" resultMap="activityResultMap">
+		SELECT s.`sign_uperID`, s.`activityID`, s.`receive_status`, s.`sign_up_time`, s.`sign_up_info`, 
+		a.`activity_type`, a.`activity_content`, a.`activity_time`, a.`activity_longitude`, a.`activity_latitude`, a.`activity_past_time`, 
+		a.`activity_place`,a.userID, a.`nickname`, a.`head_portrait`, a.`sex`, a.`birthday`,a.`activity_delete_status`,a.city,
+		a.`sign_up_number`, a.`comment_number`,a.`report_number`,a.`user_credits`, a.`accept_necessary`, a.`activity_category`, a.`activity_praise_number`
+		FROM view_activity_expire a INNER JOIN 
+		(SELECT * FROM `sign_up` WHERE sign_uperID=#{signUperID}) s 
+		ON a.activityID=s.activityID
+		ORDER BY
+			CASE WHEN (`activity_delete_status`=0) and (`activity_past_time` &gt; SYSDATE()) THEN `activity_time` ELSE '2200-00-00 00:00:00' END,
+	        `sign_up_time` DESC
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<select id="queryByActivityId" resultMap="userResultMap">
+		SELECT s.`sign_uperID`, s.`activityID`, s.`receive_status`, s.`sign_up_time`, s.`sign_up_info`, 
+		u.sex, u.birthday, u.nickname, u.head_portrait, u.user_credits
+		FROM user u INNER JOIN 
+		(SELECT * FROM `sign_up` WHERE activityID=#{activityID} <if test="beforeTime!=null"> AND sign_up_time &lt; #{beforeTime}</if>) s 
+		ON u.userID=s.sign_uperID
+		ORDER BY sign_up_time DESC 
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	<select id="querySignUperIdByActivityId" resultType="long">
+		SELECT `sign_uperID` FROM `sign_up`
+		WHERE `activityID` = #{activityID}
+		ORDER BY sign_up_time DESC 
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+	</select>
+	
+	<resultMap id="signUpResultMap" type="SignUpDO" >
+		<id column="sign_uperID" property="signUperID"/>
+		<id column="activityID" property="activityID"/>
+		<result column="receive_status" property="receiveStatus"/>
+		<result column="sign_up_time" property="signUpTime"/>
+		<result column="sign_up_info" property="signUpInfo"/>
+	</resultMap>
+	<!-- 通过报名者查找活动列表时的结果集 映射 此处不需要报名者信息 -->
+	<resultMap id="activityResultMap" type="SignUpDO">
+		<id column="sign_uperID" property="signUperID"/>
+		<id column="activityID" property="activityID"/>
+		<result column="receive_status" property="receiveStatus"/>
+		<result column="sign_up_time" property="signUpTime"/>
+		<result column="sign_up_info" property="signUpInfo"/>
+		<association property="activity" javaType="ActivityDO">
+			<id column="activityID" property="activityID"/>
+	    	<result column="activity_type" property="activityType"/>
+	    	<result column="activity_content" property="activityContent"/>
+	    	<result column="activity_time" property="activityTime"/>
+	    	<result column="activity_longitude" property="activityLongitude"/>
+	    	<result column="activity_latitude" property="activityLatitude"/>
+	    	<result column="activity_place" property="activityPlace"/>
+	    	<result column="userID" property="userID"/>
+	    	<result column="nickname" property="nickname"/>
+	    	<result column="head_portrait" property="headPortrait"/>
+	    	<result column="sex" property="sex"/>
+	    	<result column="birthday" property="birthday"/>
+	    	<result column="sign_up_number" property="signUpNumber"/>
+	    	<result column="comment_number" property="commentNumber"/>
+	    	<result column="report_number" property="reportNumber"/>
+	    	<result column="activity_past_time" property="activityPastTime"/>
+	    	<result column="user_credits" property="userCredits"/>
+	    	<result column="accept_necessary" property="acceptNecessary"/>
+	    	<result column="group_chat_id" property="groupChatId"/>
+	    	<result column="activity_category" property="activityCategory"/>
+	    	<result column="activity_praise_number" property="activityPraiseNumber"/>
+	    	<result column="activity_delete_status" property="activityDeleteStatus"/>
+	    	<result column="city" property="city"/>
+	    	<result column="is_hot" property="isHot"/>
+		</association>
+	</resultMap>
+	<!-- 通过活动 查找所有报名者信息 此处不需要活动信息 -->
+	<resultMap id="userResultMap" type="SignUpDO">
+		<id column="sign_uperID" property="signUperID"/>
+		<id column="activityID" property="activityID"/>
+		<result column="receive_status" property="receiveStatus"/>
+		<result column="sign_up_time" property="signUpTime"/>
+		<result column="sign_up_info" property="signUpInfo"/>
+		<association property="signUper" javaType="UserDO">
+			<id column="sign_uperID" property="userID"/>
+			<result column="sex" property="sex"/>
+			<result column="birthday" property="birthday"/>
+			<result column="nickname" property="nickname"/>
+			<result column="head_portrait" property="headPortrait"/>
+			<result column="user_credits" property="userCredits"/>
+		</association>
+	</resultMap>
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.AttentionDAO">
+    <insert id="insert" parameterType="Attention">
+    	INSERT INTO `attention` (`att_from_uid`, `att_to_uid`, `att_time`) 
+    	VALUES (#{att_from_uid}, #{att_to_uid}, SYSDATE());
+    </insert>
+    
+    <!-- 返回值类型为boolean 时、只有结果为1是转为true、其他值一律转为false -->
+    <select id="queryIsExists" resultType="_boolean">
+        SELECT COUNT(*) FROM `attention` 
+        WHERE `att_from_uid`=#{att_from_uid} AND `att_to_uid`=#{att_to_uid}
+    </select>
+    
+    <delete id="delete" parameterType="_boolean">
+        DELETE FROM `attention` 
+        WHERE `att_from_uid`=#{att_from_uid} AND `att_to_uid`=#{att_to_uid}
+    </delete>
+    
+    <update id="updateAfterPublishOrQueryAct">
+        UPDATE `attention` SET `att_dynamic_act_id`=#{actIds}
+        WHERE `att_from_uid`=#{att_from_uid} AND `att_to_uid`=#{att_to_uid}
+    </update>
+    
+    <update id="updateAfterPublishOrQueryPost">
+        UPDATE `attention` SET `att_dynamic_post_id`=#{postIds}
+        WHERE `att_from_uid`=#{att_from_uid} AND `att_to_uid`=#{att_to_uid}
+    </update>
+    
+    <select id="queryAttentionUsersSum" resultType="_int">
+        SELECT COUNT(`att_from_uid`) 
+        FROM `attention` 
+        WHERE `att_from_uid`=#{userId}
+    </select>
+    
+    <select id="queryFansSum" resultType="_int">
+        SELECT COUNT(`att_to_uid`) 
+        FROM `attention` 
+        WHERE `att_to_uid`=#{userId}
+    </select>
+    
+    <select id="queryAttentionInfo" resultMap="userAttentionResultMap" >
+        SELECT * FROM  `attention`
+        WHERE `att_from_uid`=#{att_from_uid} AND `att_to_uid`=#{att_to_uid}
+    </select>
+    
+    <select id="queryAttentionUsers" resultMap="userAttentionResultMap" >
+        SELECT 
+        	u.`userID`, u.`sex`, u.`birthday`, u.`nickname`, u.`head_portrait`, u.`user_credits`, u.`personal_sign`,
+        	att.`att_time` , att.`att_dynamic_post_id`, att.`att_dynamic_act_id`
+        FROM 
+        	`user` u 
+        	INNER JOIN
+        	(SELECT * FROM `attention` WHERE `att_from_uid`=#{userId}) att
+        	ON u.`userID`=att.`att_to_uid`
+        ORDER BY att.`att_time` DESC
+        <if test="offset!=null">
+       	    <if test="size!=null">
+				LIMIT #{size} OFFSET #{offset}       	        
+       	    </if>
+       	</if>
+    </select>
+    
+    <select id="queryFansOfUser" resultMap="userAttentionResultMap" >
+        SELECT 
+        	u.`userID`, u.`sex`, u.`birthday`, u.`nickname`, u.`head_portrait`, u.`user_credits`, u.`personal_sign`,
+			att.`att_time`, att.`att_dynamic_post_id`, att.`att_dynamic_act_id`, att.`att_from_uid`, att.`att_to_uid`
+        	, (SELECT COUNT(*) FROM `attention` WHERE `attention`.`att_from_uid`=#{userId} AND `attention`.`att_to_uid`=u.`userID`) AS `hasAttentioned`
+        FROM 
+        	`user` u 
+        	INNER JOIN
+        	(SELECT * FROM `attention` WHERE `att_to_uid`=#{userId}) att
+        	ON u.`userID`=att.`att_from_uid`
+        ORDER BY att.`att_time` DESC
+        <if test="offset!=null">
+       	    <if test="size!=null">
+				LIMIT #{size} OFFSET #{offset}       	        
+       	    </if>
+       	</if>
+    </select>
+    
+    <resultMap type="Attention" id="userAttentionResultMap">
+        <result column="att_from_uid" property="att_from_uid"/>
+        <result column="att_to_uid" property="att_to_uid"/>
+        <result column="att_time" property="att_time"/>
+        <result column="hasAttentioned" property="hasAttentioned"/>
+        <result column="att_dynamic_post_id" property="att_dynamic_post_id"/>
+        <result column="att_dynamic_act_id" property="att_dynamic_act_id"/>
+        <association property="user" javaType="UserDO">
+          	<id column="userID" property="userID"/>
+			<result column="sex" property="sex"/>
+			<result column="birthday" property="birthday"/>
+			<result column="nickname" property="nickname"/>
+			<result column="head_portrait" property="headPortrait"/>
+			<result column="user_credits" property="userCredits"/>  
+			<result column="personal_sign" property="personalSign"/>  
+        </association>
+    </resultMap>
+</mapper>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.ActivityDAO">
+	<!-- 第三方缓存框架
+	<cache type="org.mybatis.caches.ehcache.LoggingEhcache" > 
+        <property name="timeToIdleSeconds" value="3600"/>
+        <property name="timeToLiveSeconds" value="3600"/>
+        <property name="maxEntriesLocalHeap" value="1000"/>
+        <property name="maxEntriesLocalDisk" value="10000000"/>
+        <property name="memoryStoreEvictionPolicy" value="LRU"/>
+    </cache>
+     ehcache -->
+     <cache />
+    
+	<insert id="insertActivity" parameterType="ActivityDO" useGeneratedKeys="true" keyProperty="activityID">
+		INSERT INTO `activity` (`activity_type`, `activity_content`, `invited_object_sex`,
+		`activity_explain`, `expected_number`, `activity_time`, `activity_longitude`, `activity_latitude`, 
+		`activity_place`, `userID`, `is_hot`,
+		`create_time`, `activity_past_time`, `activity_picture`, `landmark`, `accept_necessary`, `group_chat_id`, `activity_category`, `city`) 
+		VALUES (#{activityType}, #{activityContent}, #{invitedObjectSex}, #{activityExplain},
+		<choose>
+    	    <when test="expectedNumber==null">0</when>
+    	    <otherwise>#{expectedNumber}</otherwise>
+   	    </choose>, #{activityTime}, #{activityLongitude}, #{activityLatitude}, #{activityPlace}, #{userID}, #{isHot},
+		SYSDATE(), #{activityPastTime}, #{activityPicture}, #{landmark}, #{acceptNecessary}, #{groupChatId}, #{activityCategory}, #{city} )
+	</insert>
+	
+	<insert id="insertActivityExpire" parameterType="ActivityDO" >
+		INSERT INTO `activity_expire` (`activityID`, `activity_type`, `activity_content`, `invited_object_sex`,
+		`activity_explain`, `expected_number`, `activity_time`, `activity_longitude`, `activity_latitude`, 
+		`activity_place`, `userID`, `create_time`, `activity_past_time`, `activity_picture`, 
+		`landmark`, `accept_necessary`, `group_chat_id`, `activity_category`, `act_invited_status`, `city`, `is_hot`, `activity_views`) 
+		VALUES 
+		(#{activityID}, #{activityType}, #{activityContent}, #{invitedObjectSex}, #{activityExplain},
+		#{expectedNumber}, #{activityTime}, #{activityLongitude}, #{activityLatitude}, #{activityPlace},
+		#{userID}, 	#{createTime}, #{activityPastTime}, #{activityPicture},
+		 #{landmark}, #{acceptNecessary}, #{groupChatId}, #{activityCategory}, #{actInvitedStatus}, #{city}, #{isHot}, #{activityViews})
+	</insert>
+	
+	<delete id="deleteActivityById" parameterType="_long" >
+		DELETE FROM `activity` WHERE activityID=#{activityID};
+		UPDATE `activity_expire` SET `activity_delete_status`=1 WHERE activityID=#{activityID};
+	</delete>
+	
+	<update id="updateActivityViewsById">
+	    UPDATE `activity`,`activity_expire` 
+	    SET `activity_expire`.`activity_views`=`activity_expire`.`activity_views`+1,`activity`.`activity_views`=`activity`.`activity_views`+1
+	    WHERE `activity_expire`.`activityID`=#{activityId} AND`activity`.`activityID`=#{activityId};
+	</update>
+	
+	<update id="updateActivityViewsByGroupChatId">
+	    UPDATE `activity` SET `activity_views`=`activity_views`+1
+	    WHERE `group_chat_id`=#{groupChatId};
+	    UPDATE `activity_expire` SET `activity_views`=`activity_views`+1
+	    WHERE `group_chat_id`=#{groupChatId};
+	</update>
+	
+	<update id="updataPastTimeOfActivity" >
+	    <!-- 活动圆满结束 直接在大厅下线 -->
+	   	DELETE FROM  `activity`
+		WHERE `activityID`=#{activityId};
+	    UPDATE  `activity_expire` SET `activity_past_time`=#{time}
+		WHERE `activityID`=#{activityId};
+	</update>
+	
+	<update id="updateGroupChatOfActivityToNull" >
+	    UPDATE  `activity`	SET `group_chat_id`=NULL
+		WHERE `activityID`=#{activityId};
+	    UPDATE  `activity_expire` SET `group_chat_id`=NULL
+		WHERE `activityID`=#{activityId};
+	</update>
+	
+	<update id="updateActInvitedStatusById" >
+	    UPDATE  `activity`	SET `act_invited_status`=#{actInvitedStatus}
+		WHERE `activityID`=#{activityId};
+	    UPDATE  `activity_expire`	SET `act_invited_status`=#{actInvitedStatus}
+		WHERE `activityID`=#{activityId};
+	</update>
+	
+	<select id="queryAllStatusFromExpire" resultMap="activityResultMap">
+	    select `userID`,`create_time`,`activity_past_time`,`activity_time`,`activity_delete_status`,`act_invited_status` 
+	    from `activity_expire` where activityID=#{activityID}
+	</select>
+	
+	<select id="queryById" resultMap="activityResultMap">
+	    select * from `activity` where activityID=#{activityID}
+	</select>
+	
+	<update id="updateExplainOfActivityAndExpire" >
+	    UPDATE  `activity`	SET `activity_explain`=#{explain}
+		WHERE `activityID`=#{activityId};
+	    UPDATE  `activity_expire`	SET `activity_explain`=#{explain}
+		WHERE `activityID`=#{activityId};
+	</update>
+	
+	<select id="queryUserId" parameterType="_long" resultType="_long">
+		SELECT userID FROM `activity_expire` WHERE activityID = #{activityID}
+	</select>
+	
+	<select id="queryActIdByGroupChatId" parameterType="string" resultType="_long">
+		SELECT `activityID` FROM `activity_expire` WHERE `group_chat_id` = #{chatId}
+	</select>
+	
+	<!-- 排序算法 order by case 未过期的按时间升序、过期的按时间降序-->
+    <select id="queryExpireByUserId" resultMap="activityResultMap">
+        SELECT `activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `city`,
+        `group_chat_id`,`invited_object_sex`,`activity_place`, `userID`, `nickname`, `head_portrait`, `sex`, `birthday`,`activity_picture`,
+        `comment_number`, `report_number`,`activity_explain`, `activity_past_time` , `create_time`, `landmark`, 
+        `accept_necessary`, `user_credits`, `activity_category`,`activity_praise_number`, `activity_delete_status`, `expected_number`,
+        `interested_number`,`act_invited_status`, `activity_views`,
+        (SELECT COUNT(`i_user_id`) FROM `interest` WHERE `interest`.`i_user_id`=#{userID}  AND `i_act_id`=`view_activity_expire`.`activityID`) AS `has_interested`
+        FROM `view_activity_expire` 
+        WHERE userID = #{userID} 
+        ORDER BY 
+        	CASE WHEN (`activity_delete_status`=0) and (`activity_past_time` &gt; SYSDATE()) THEN `activity_time` ELSE '2200-00-00 00:00:00' END,
+        	`create_time` DESC
+        <if test="size!=0"> LIMIT #{size} OFFSET #{offset}</if>
+    </select>
+    
+    <select id="queryExpireById" parameterType="_long" resultMap="activityResultMap" useCache="false">
+    	SELECT 
+		`activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `city`,
+        `group_chat_id`,`invited_object_sex`,`activity_place`, `userID`, `nickname`, `head_portrait`, `sex`, `birthday`,`activity_picture`,	
+        `comment_number`, `report_number`,`activity_explain`, `activity_past_time` , `create_time`, `landmark`, 
+        `accept_necessary`, `user_credits`, `activity_category`,`activity_praise_number`, `activity_delete_status`, `expected_number`,
+        `interested_number`,`act_invited_status`, `activity_views`,`is_hot`
+        
+        <if test="userID!=null">
+	        , (SELECT COUNT(`i_user_id`) FROM `interest` WHERE `interest`.`i_user_id`=#{userID}  AND `i_act_id`=`view_activity_expire`.`activityID`) AS `has_interested`
+	        , (SELECT COUNT(`uid`) FROM `areport` WHERE `areport`.`uid`=#{userID}  AND `to_actid`=`view_activity_expire`.`activityID`) AS `has_reported`
+	        , (SELECT COUNT(*) FROM `attention` WHERE `att_from_uid`=#{userID} AND `att_to_uid`=`view_activity_expire`.`userID`) AS `hasAttentioned`
+        </if>
+		FROM `view_activity_expire` WHERE activityID=#{activityID}
+    </select>
+    
+    <select id="queryExpireByGroupChatId" resultMap="activityResultMap" useCache="false">
+    	SELECT 
+		`activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `city`,
+        `group_chat_id`,`invited_object_sex`,`activity_place`, `userID`, `nickname`, `head_portrait`, `sex`, `birthday`,`activity_picture`,	
+        `comment_number`, `report_number`,`activity_explain`, `activity_past_time` , `create_time`, `landmark`, 
+        `accept_necessary`, `user_credits`, `activity_category`,`activity_praise_number`, `activity_delete_status`, `expected_number`,
+        `interested_number`,`act_invited_status`, `activity_views`,`is_hot`
+       
+        <if test="userID!=null">
+	        , (SELECT COUNT(`i_user_id`) FROM `interest` WHERE `interest`.`i_user_id`=#{userID}  AND `i_act_id`=`view_activity_expire`.`activityID`) AS `has_interested`
+	        , (SELECT COUNT(`uid`) FROM `areport` WHERE `areport`.`uid`=#{userID}  AND `to_actid`=`view_activity_expire`.`activityID`) AS `has_reported`
+	        , (SELECT COUNT(*) FROM `attention` WHERE `att_from_uid`=#{userID} AND `att_to_uid`=`view_activity_expire`.`userID`) AS `hasAttentioned`
+        </if>
+		FROM `view_activity_expire` WHERE `group_chat_id`=#{groupChatId}
+    </select>
+    
+    <select id="queryTheHostestActivity" resultMap="activityResultMap">
+        SELECT 
+        	`activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `activity_place`, 
+    		`userID`, `nickname`, `head_portrait`, `sex`, `birthday`,`act_invited_status`, `activity_past_time`,`activity_picture`
+    	FROM `view_activity`
+        <where>
+    		(activity_longitude BETWEEN #{longitude} AND #{desLongitude}) AND (activity_latitude between #{latitude} AND #{desLatitude})
+    		AND `userID` &lt;&gt; userId
+    		<if test="sex!=null"> AND sex=#{sex} </if>	
+    		<if test="types!=null"> AND (activity_type IN <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>) </if>
+    	</where> 
+    	ORDER BY `activity_views` DESC
+    	LIMIT 1 OFFSET 0
+    </select>
+    
+    <select id="queryByScreenCondition" resultMap="activityResultMap" >
+    	SELECT `activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `activity_place`, 
+    	`userID`, `nickname`, `head_portrait`, `sex`, `birthday`, `city`, `comment_number`, `report_number`, `activity_picture`,
+    	`activity_past_time`, `create_time`, `landmark`, `accept_necessary`, `user_credits`, `activity_category`,`activity_praise_number`
+    	FROM `view_activity`
+    	<where>
+    		 (activity_longitude BETWEEN #{longitude} AND #{desLongitude}) AND (activity_latitude between #{latitude} AND #{desLatitude})
+    		 <if test="city!=null">AND `city`=#{city}</if>
+    		 <!--AND activity_past_time &gt; SYSDATE() 		 只筛选还未过期的 -->
+    		<if test="removeIds!=null"> AND activityID NOT IN <foreach collection="removeIds" item="id" open="(" separator="," close=")">#{id}</foreach></if>
+    		<if test="beforeTime!=null"> AND create_time &lt; #{beforeTime}</if>			<!-- 筛选该时间之前的活动 -->
+    		<if test="sex!=null"> AND `invited_object_sex`=#{sex} </if>	
+    		<if test="types!=null"> AND (activity_type IN <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>) </if>
+    		<if test="(startTime!=null) and (endTime!=null)"> AND (birthday BETWEEN #{startTime} AND #{endTime})</if>	
+    	</where> 
+    </select>
+    
+    <select id="queryBySearch" resultMap="activityResultMap">
+    	SELECT * FROM 
+		   	(SELECT `activityID`, `activity_type`, `activity_content`, `activity_time`, `activity_longitude`, `activity_latitude`, `city`,
+		       `group_chat_id`,`invited_object_sex`,`activity_place`, `userID`, `nickname`, `head_portrait`, `sex`, `birthday`,	`activity_picture`,
+		       `comment_number`, `report_number`,`activity_explain`, `activity_past_time` , `create_time`, `landmark`, 
+		       `accept_necessary`, `user_credits`, `activity_category`,`activity_praise_number`, `expected_number`,`interested_number`,act_invited_status,
+		       `activity_views`
+		       <!-- 
+		        <if test="userID!=null">
+		           ,(SELECT COUNT(`i_user_id`) FROM `interest` WHERE `interest`.`i_user_id`=#{userID}  AND `i_act_id`=`view_activity`.`activityID`) AS `has_interested`
+		        </if> -->
+		   	FROM `view_activity` 
+		   	WHERE 
+	    	    `is_hot` = #{isHot} 
+			   	AND `city`=#{city}
+	    	    <if test="longitude!=null">
+	    	        <if test="desLongitude!=null">
+	    	            <if test="latitude!=null">
+	    	                <if test="desLatitude!=null">
+	    	    				 AND (activity_longitude BETWEEN #{longitude} AND #{desLongitude}) AND (activity_latitude between #{latitude} AND #{desLatitude})
+	    	    			</if>
+	    	    		</if>
+	    	    	</if>
+	    	    </if>
+		   	) s
+    	<where>
+   			<if test="keyWords!=null">
+	    		(
+   				<foreach collection="keyWords" item="word" separator=" OR " >(activity_content LIKE #{word}) </foreach>
+   				OR
+   				<foreach collection="keyWords" item="word" separator=" OR " >(activity_explain LIKE #{word}) </foreach>
+   				)
+   			</if>
+    		<if test="sex!=null"> AND `invited_object_sex`=#{sex} </if>	
+    		<if test="types!=null"> AND (activity_type IN <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach>) </if>
+    		<if test="beforeTime!=null"> AND create_time &lt; #{beforeTime}</if>			<!-- 筛选该时间之前的活动 -->
+    	</where> 
+    </select>
+    
+    <select id="queryByIds" resultMap="activityResultMap">
+        SELECT * FROM `view_activity`
+        WHERE `activityID` IN <foreach collection="activityIds" item="id" open="(" separator="," close=")">#{id}</foreach>
+        	<if test="types!=null">AND activity_type IN <foreach collection="types" item="type" open="(" separator="," close=")">#{type}</foreach></if>
+    </select>
+        
+    <select id="queryFieldOfPostFromExpire" resultMap="activityResultMap">
+        SELECT `activityID`,`activity_type`,`activity_content`,`city` FROM `activity_expire`
+        WHERE `activityID`=#{activityId}
+    </select>
+        
+    <!-- 如要将结果映射到HashMap上有必要为每列指定javaType -->
+    <resultMap id="activityResultMap" type="ActivityDO" >
+    	<id column="activityID" property="activityID"/>
+    	<result column="activity_type" property="activityType"/>
+    	<result column="activity_content" property="activityContent"/>
+    	<result column="invited_object_sex" property="invitedObjectSex"/>
+    	<result column="activity_explain" property="activityExplain"/>
+    	<result column="expected_number" property="expectedNumber"/>
+    	<result column="activity_time" property="activityTime"/>
+    	<result column="activity_longitude" property="activityLongitude"/>
+    	<result column="activity_latitude" property="activityLatitude"/>
+    	<result column="activity_place" property="activityPlace"/>
+    	<result column="userID" property="userID"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="head_portrait" property="headPortrait"/>
+    	<result column="sex" property="sex"/>
+    	<result column="birthday" property="birthday"/>
+    	<result column="create_time" property="createTime"/>
+    	<result column="comment_number" property="commentNumber"/>
+    	<result column="report_number" property="reportNumber"/>
+    	<result column="activity_past_time" property="activityPastTime"/>
+    	<result column="activity_picture" property="activityPicture"/>
+    	<result column="landmark" property="landmark"/>
+    	<result column="accept_necessary" property="acceptNecessary"/>
+    	<result column="group_chat_id" property="groupChatId"/>
+    	<result column="user_credits" property="userCredits"/>
+    	<result column="activity_category" property="activityCategory"/>
+    	<result column="activity_praise_number" property="activityPraiseNumber"/>
+    	<result column="act_invited_status" property="actInvitedStatus"/>
+    	<result column="activity_delete_status" property="activityDeleteStatus"/>
+    	<result column="city" property="city"/>
+    	<result column="has_interested" property="hasInterested"/>
+    	<result column="has_reported" property="hasReported"/>
+    	<result column="interested_number" property="interestedNumber"/>
+    	<result column="is_hot" property="isHot"/>
+    	<result column="activity_views" property="activityViews"/>
+    	<!-- 可以映射一个关联对象 property指定该对象在Activity中属性名 javaType指定类型 
+    	<association property="user" javaType="UserDO" resultMap="">
+    		<id column="userID" property="userID"/>
+    		<result column="sex" property="sex"/>
+    		<result column="nickname" property="nickname"/>
+    		<result column="head_protraits" property="headProtraits"/>
+    	</association> -->
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.APraiseDAO">
+    <insert id="insert" parameterType="APraise">
+    	INSERT INTO `apraise` (`praise_user_id`, `praise_activity_id`, `praise_time`) 
+    	VALUES (#{praiseUserId}, #{praiseActivityId}, SYSDATE());
+    </insert>
+    
+    <!-- 返回值类型为boolean 时、只有结果为1是转为true、其他值一律转为false -->
+    <select id="queryIsExists" resultType="_boolean">
+        SELECT COUNT(*) FROM `apraise` 
+        WHERE `praise_user_id`=#{praiseUserId} AND `praise_activity_id`=#{praiseActivityId}
+    </select>
+    
+    <delete id="delete" parameterType="_boolean">
+        DELETE FROM `apraise` 
+        WHERE `praise_user_id`=#{praiseUserId} AND `praise_activity_id`=#{praiseActivityId}
+    </delete>
+</mapper>

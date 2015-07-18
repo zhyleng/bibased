@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!-- Mybatis 首先通过该配置文件创建一个SqlSessionFactory -->
+<configuration>
+	<settings>
+		<setting name="logImpl" value="LOG4J" />
+	</settings>
+	<!--typeAliases 标签为每个javaBean 定义一个别名（以后的returnType就使用别名就好了。而不必加上包名） -->
+	<typeAliases>
+		<typeAlias alias="UserDO" type="com.hichujian.model.UserDO" />
+		<typeAlias alias="ActivityDO" type="com.hichujian.model.ActivityDO" />
+		<typeAlias alias="UBlack" type="com.hichujian.model.UBlack" />
+		<typeAlias alias="AComment" type="com.hichujian.model.AComment" />
+		<typeAlias alias="MessageDO" type="com.hichujian.model.MessageDO" />
+		<typeAlias alias="PushSetting" type="com.hichujian.model.PushSetting" />
+		<typeAlias alias="AReport" type="com.hichujian.model.AReport" />
+		<typeAlias alias="SignUpDO" type="com.hichujian.model.SignUpDO" />
+		<typeAlias alias="Feedback" type="com.hichujian.model.Feedback" />
+		<typeAlias alias="CreditsDO" type="com.hichujian.model.CreditsDO" />
+		<typeAlias alias="APraise" type="com.hichujian.model.APraise" />
+		<typeAlias alias="PostDO" type="com.hichujian.model.PostDO" />
+		<typeAlias alias="PComment" type="com.hichujian.model.PComment" />
+		<typeAlias alias="PPraise" type="com.hichujian.model.PPraise" />
+		<typeAlias alias="Config" type="com.hichujian.model.Config" />
+		<typeAlias alias="ClientVersionInfoDO" type="com.hichujian.model.ClientVersionInfoDO" />
+		<typeAlias alias="Interest" type="com.hichujian.model.Interest" />
+		<typeAlias alias="Attention" type="com.hichujian.model.Attention" />
+		<typeAlias alias="UReport" type="com.hichujian.model.UReport" />
+		<typeAlias alias="City" type="com.hichujian.model.City" />
+	</typeAliases>
+
+	<!-- 配置每个映射文件路径 将所有的映射器注册到SqlSessionFactory中 -->
+	<mappers>
+		<mapper resource="com/hichujian/mapper/UserMapper.xml" />
+		<mapper resource="com/hichujian/mapper/ActivityMapper.xml" />
+		<mapper resource="com/hichujian/mapper/UBlackMapper.xml" />
+		<mapper resource="com/hichujian/mapper/ACommentMapper.xml" />
+		<mapper resource="com/hichujian/mapper/MessageMapper.xml" />
+		<mapper resource="com/hichujian/mapper/PushSettingMapper.xml" />
+		<mapper resource="com/hichujian/mapper/AReportMapper.xml" />
+		<mapper resource="com/hichujian/mapper/SignUpMapper.xml" />
+		<mapper resource="com/hichujian/mapper/FeekbackMapper.xml" />
+		<mapper resource="com/hichujian/mapper/CreditsMapper.xml" />
+		<mapper resource="com/hichujian/mapper/APraiseMapper.xml" />
+		<mapper resource="com/hichujian/mapper/PostMapper.xml" />
+		<mapper resource="com/hichujian/mapper/PCommentMapper.xml" />
+		<mapper resource="com/hichujian/mapper/PPraiseMapper.xml" />
+		<mapper resource="com/hichujian/mapper/ConfigMapper.xml" />
+		<mapper resource="com/hichujian/mapper/ClientVersionInfoMapper.xml" />
+		<mapper resource="com/hichujian/mapper/InterestMapper.xml" />
+		<mapper resource="com/hichujian/mapper/AttentionMapper.xml" />
+		<mapper resource="com/hichujian/mapper/UReportMapper.xml" />
+	</mappers>
+</configuration>

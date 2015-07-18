@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.PushSettingDAO">
+    <cache />
+    
+	<insert id="insert" parameterType="PushSetting" >
+	    <!-- 最后推送时间、开关默认都是on开启的 -->
+		INSERT INTO `push_setting` (`uid`, `subs_sex`, `subs_distance`, `subs_push_frequency`, `subs_act_type`)
+		 VALUES (#{uid}, #{subsSex}, #{subsDistance}, #{subsPushFrequency}, #{subsActType});
+	</insert>
+	
+	<update id="updateSubscribe">
+	    UPDATE `push_setting` SET
+			`subs_sex`=#{subsSex},
+			`subs_act_type`=#{subsActType}
+			<if test="switchSubsActivity!=null">,`switch_subs_activity`=#{switchSubsActivity}</if>
+	 	WHERE `uid`=#{uid} 
+	</update>
+	
+	<update id="updateSwitch" parameterType="PushSetting">
+		UPDATE `push_setting`
+		<set>
+			<if test="switchSubsActivity!=null">`switch_subs_activity`=#{switchSubsActivity}, </if>
+			<if test="switchDuringSoundOff!=null">`switch_during_sound_off`=#{switchDuringSoundOff},</if>
+			<if test="switchNewActOfAttenUser!=null">`switch_new_act_of_atten_user`=#{switchNewActOfAttenUser},</if>
+			<if test="switchActInterested!=null">`switch_act_interested`=#{switchActInterested},</if>
+			<if test="switchActPosted!=null">`switch_act_posted`=#{switchActPosted},</if>
+			<if test="switchNewComment!=null">`switch_new_comment`=#{switchNewComment},</if>
+			<if test="switchNewCommentReply!=null">`switch_new_comment_reply`=#{switchNewCommentReply}</if>
+		</set>
+	 	WHERE `uid`=#{uid} 
+	</update>
+	
+	<update id="updateLastPushTimeToNow" >
+		UPDATE `push_setting` SET `subs_last_push_time`=SYSDATE() 
+		WHERE (`uid`=#{uid})
+	</update>
+	
+	<sql id="pushInfo">
+	   `uid`,`subs_sex`,`subs_distance`,`subs_act_type`,`subs_push_frequency`,`subs_last_push_time`,
+	   `switch_subs_activity`,`switch_during_sound_off`,`switch_new_act_of_atten_user`,
+	   `switch_act_interested`,`switch_act_posted`,`switch_new_comment`,`switch_new_comment_reply`
+	</sql>
+	
+	<sql id="subscribeInfo">
+	    `uid`,`subs_sex`,`subs_distance`,`subs_act_type`,`subs_push_frequency`,`subs_last_push_time`, `switch_subs_activity`
+	</sql>
+	
+	<sql id="switchInfo">
+	    `switch_subs_activity`,`switch_during_sound_off`,`switch_new_act_of_atten_user`,
+	   `switch_act_interested`,`switch_act_posted`,`switch_new_comment`,`switch_new_comment_reply`
+	</sql>
+	
+	<select id="querySubscribeInfo" parameterType="_long" resultMap="pushSettingResultMap">
+		SELECT 
+			<include refid="subscribeInfo"/>
+		FROM `push_setting` WHERE (`uid`=#{uid})
+	</select>
+	
+	<select id="querySubscribeInfos" resultMap="pushSettingResultMap">
+		SELECT 
+			<include refid="subscribeInfo"/>
+		FROM `push_setting` 
+		ORDER BY `uid`
+		LIMIT #{size} OFFSET #{offset}
+	</select>
+	
+	<select id="querySwitchInfo" parameterType="_long" resultMap="pushSettingResultMap">
+		SELECT 
+			<include refid="switchInfo"/> 
+		FROM `push_setting` WHERE (`uid`=#{uid})
+	</select>
+	
+	<select id="queryByUserId" parameterType="_long" resultMap="pushSettingResultMap">
+		SELECT 
+			<include refid="pushInfo"/> 
+		FROM `push_setting` WHERE (`uid`=#{uid})
+	</select>
+	
+	<select id="query" parameterType="_long" resultMap="pushSettingResultMap">
+		SELECT * FROM `push_setting` 
+		ORDER BY `uid`
+		<if test="size!=null"> 
+		    <if test="offset!=null">
+		    	LIMIT #{size} OFFSET #{offset}
+		    </if>
+		</if>
+	</select>
+	
+	<resultMap id="pushSettingResultMap" type="PushSetting">
+		<id column="uid" property="uid"/>
+		<result column="subs_sex" property="subsSex"/>
+		<result column="subs_distance" property="subsDistance"/>
+		<result column="subs_act_type" property="subsActType"/>
+		<result column="subs_push_frequency" property="subsPushFrequency"/>
+		<result column="subs_last_push_time" property="subsLastPushTime"/>
+		<result column="switch_subs_activity" property="switchSubsActivity"/>
+		<result column="switch_during_sound_off" property="switchDuringSoundOff"/>
+		<result column="switch_new_act_of_atten_user" property="switchNewActOfAttenUser"/>
+		<result column="switch_act_interested" property="switchActInterested"/>
+		<result column="switch_act_posted" property="switchActPosted"/>
+		<result column="switch_new_comment" property="switchNewComment"/>
+		<result column="switch_new_comment_reply" property="switchNewCommentReply"/>
+	</resultMap>
+</mapper>

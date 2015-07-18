@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.CreditsDAO">
+    <cache />
+    <insert id="insert" parameterType="CreditsDO" useGeneratedKeys="true" keyProperty="creditsId">
+        insert into `credit_records`(`credits_event`,`credits_time`,`credits_change`,`credits_total_now`,`credits_user_id`)
+        values(#{creditsEvent}, SYSDATE(), #{creditsChange}, #{creditsTotalNow}, #{creditsUserId});
+    </insert>
+    
+    <select id="query" resultMap="creditsMap">
+        SELECT * FROM `credit_records`
+        WHERE `credits_user_id`=#{userId}
+    </select>
+    
+    <select id="queryExistsByEvent" resultType="_boolean">
+        SELECT COUNT(*) FROM `credit_records`
+        WHERE `credits_user_id`=#{userId} AND `credits_event`=#{event}
+    </select>
+    
+    <select id="queryLatestTimeByEvent" resultType="java.sql.Timestamp">
+        SELECT MAX(`credits_time`) FROM `credit_records`
+        WHERE `credits_user_id`=#{userId} AND `credits_event`=#{event}
+    </select>
+    
+    <select id="queryCreditSumByTime" resultType="int">
+        SELECT SUM(`credits_change`) FROM `credit_records`
+        WHERE `credits_user_id`=#{userId} AND `credits_time` &gt; #{beforeTime}
+        <if test="event!=null"> AND `credits_event`=#{event}</if>
+    </select>
+    
+	<resultMap id="creditsMap" type="CreditsDO">
+		<id column="credits_id" property="creditsId"/>
+		<result column="credits_event" property="creditsEvent"/>
+		<result column="credits_time" property="creditsTime"/>
+		<result column="credits_change" property="creditsChange"/>
+		<result column="credits_total_now" property="creditsTotalNow"/>
+		<result column="credits_user_id" property="creditsUserId"/>
+	</resultMap>
+</mapper>

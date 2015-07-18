@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.UReportDAO">
+	<!-- 
+	<cache eviction="LRU" />
+	 -->
+	<insert id="insert" parameterType="UReport">
+		INSERT INTO `ureport` (`uid`, `to_uid`, `time`, `reason`) 
+		VALUES (#{uid}, #{toUid}, SYSDATE(), #{reason})
+	</insert>
+	
+	<delete id="delete" >
+		DELETE FROM `ureport` WHERE uid=#{uid} AND to_uid=#{toUid}
+	</delete>
+	
+	<update id="updateStatus" >
+		UPDATE `ureport` SET `status`=#{status} WHERE  uid=#{uid} AND to_uid=#{toUid}
+	</update>
+	
+	<select id="queryIsReported" resultType="boolean" >
+		SELECT COUNT(uid) FROM `ureport` WHERE uid=#{uid} AND to_uid=#{toUid}
+	</select>
+	
+	<select id="queryById" resultMap="uReportResultMap" >
+		SELECT * FROM `ureport` WHERE uid=#{uid} AND to_uid=#{toUid}		
+	</select>
+	
+	<resultMap id="uReportResultMap" type="UReport">
+		<result column="uid" property="uid" />
+		<result column="to_uid" property="toUid" />
+		<result column="time" property="time" />
+		<result column="reason" property="reason" />
+		<result column="status" property="status" />
+	</resultMap>
+</mapper>

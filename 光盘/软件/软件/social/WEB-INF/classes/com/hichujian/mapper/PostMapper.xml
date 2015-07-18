@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.PostDAO">
+    <cache></cache>
+	<insert id="insert" parameterType="PostDO" useGeneratedKeys="true" keyProperty="postId">
+		INSERT INTO `post`(
+		`post_title`,`post_content`,`post_picture`,`post_time`,`post_type`,`post_place`,`post_longitude`,`post_latitude`,`user_id`,`user_nickname`,`user_sex`,`user_head_portrait`,`user_credits`,`post_act_id`,`activity_content`)
+		VALUES 
+		(#{postTitle}, #{postContent}, #{postPicture}, SYSDATE(), #{postType}, #{postPlace}, #{postLongitude}, #{postLatitude}, #{userId}, #{userNickname}, #{userSex}, #{userHeadPortrait}, #{userCredits}, #{postActId}, #{activityContent})
+	</insert>
+	
+	<update id="updateUserInfo">
+		UPDATE `post` 
+		<set>
+			<if test="userNickname!=null">`user_nickname`=#{userNickname},</if>
+			<if test="userSex!=null">`user_sex`=#{userSex},</if>
+			<if test="userHeadPortrait!=null">`user_head_portrait`=#{userHeadPortrait},</if>
+			<if test="userCredits!=null  and userCredits!=0">`user_credits`=#{userCredits}</if>
+		</set> 
+		WHERE `user_id`=#{userId}
+	</update>
+	
+	<update id="updatePraiseNumber">
+		UPDATE  `post`
+		<set>
+			<choose>
+				<when test="operation==0"> `post_praise_number`=`post_praise_number`-1 </when>
+				<when test="operation==1"> `post_praise_number`=`post_praise_number`+1 </when>
+				<otherwise></otherwise>
+			</choose>
+		</set>
+		 WHERE `post_id`=#{postId};
+	</update>
+	
+	<update id="updateCommentNumber">
+		UPDATE  `post`
+		<set>
+			<choose>
+				<when test="operation==0"> `post_comment_number`=`post_comment_number`-1 </when>
+				<when test="operation==1"> `post_comment_number`=`post_comment_number`+1 </when>
+				<otherwise></otherwise>
+			</choose>
+		</set>
+		 WHERE `post_id`=#{postId};
+	</update>
+	
+	<update id="updateStatus">
+		UPDATE `post` 
+		<set>
+		    `post_status`=#{postStatus}
+		</set> 
+		WHERE `post_id`=#{postId}
+	</update>
+	
+	<select id="queryPostNumberWithLngAndLat" resultType="_int">
+	    SELECT COUNT(post_id) FROM `post`
+	    WHERE `post_type`=#{postType}  AND `post_status`=0
+	      AND (post_longitude BETWEEN #{startLongitude} AND #{endLongitude}) 
+	      AND (post_latitude BETWEEN #{startLatitude} AND #{endLatitude})
+	</select>
+	
+	<select id="queryLatestPostOfActivity" resultMap="postResultMap">
+	    SELECT 
+	    	`post_id`,`post_title`,`post_content`,`post_picture`,`post_time`,`post_type`,`post_act_id`,`activity_content`
+	    FROM `post` 
+	    WHERE `post_act_id`=#{activityId} AND `post_status`=0
+	    <!-- 不筛选与之有拉黑关系的用户发的帖子 -->
+	    ORDER BY `post_time` DESC
+	    LIMIT 1 OFFSET 0
+	</select>
+	
+	<!-- 帖子信息  -->
+	<sql id="postInfo">
+		`post_id`,`post_title`,`post_content`,`post_picture`,`post_time`,`post_type`,`post_praise_number`,
+	    `post_comment_number`,`post_place`,`post_longitude`,`post_latitude`,`post_status`,`user_id`,
+	    `user_nickname`,`user_sex`,`user_head_portrait`,`user_credits`,`post_act_id`,`activity_content`,`city`	    
+	</sql>
+	<!-- 去除有拉黑关系的人发的活动 -->
+	<select id="queryPostsOfActivity" resultMap="postResultMap">
+		SELECT <include refid="postInfo"/>
+	    <if test="userId!=null">
+	        ,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=`post`.`post_id`) AS `hasPraised`
+	        ,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=`post`.`post_id`) AS `hasCommented`
+	    </if>
+	    FROM `post`
+	    WHERE `post_act_id`=#{activityId}   AND `post_status`=0 
+	    <!-- 不筛选与之有拉黑关系的用户发的帖子 -->
+	    <if test="beforeTime!=null">AND `post_time` &lt; #{beforeTime}</if> 
+	    ORDER BY `post_time` DESC
+	    <if test="size!=null">
+	        <if test="size!=null">
+	            LIMIT #{size} OFFSET #{offset}
+	        </if>
+	    </if>
+	</select>
+	
+	<select id="queryUserId" resultType="long">
+	    SELECT `user_id` FROM `post`
+	    WHERE `post_id`=#{postId}
+	</select>
+	
+	<select id="queryById" resultMap="postResultMap">
+	    SELECT <include refid="postInfo"/>
+	    <if test="userId!=null">
+	        ,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=`post`.`post_id`) AS `hasPraised`
+	        ,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=`post`.`post_id`) AS `hasCommented`
+	    </if>
+	    FROM `post`
+	    WHERE `post_id`=#{postId}
+	</select>
+	
+	<select id="queryByType" resultMap="postResultMap">
+	    SELECT <include refid="postInfo"/>
+	    	   <if test="userId!=null">
+	    	 		,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=`post`.`post_id`) AS `hasPraised`
+	    	 		,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=`post`.`post_id`) AS `hasCommented`	    	       
+	    	   </if>
+		FROM `post`
+	    WHERE `post_status`=0 AND `city`=#{city}
+	    <!-- 不筛选与之有拉黑关系的用户发的帖子 
+	    <if test="userId!=null">
+	    	AND `user_id` NOT IN (	SELECT `to_uid` AS `id` FROM `ublack`
+	   								WHERE `uid`=#{userId}
+	   								UNION 
+	    							SELECT `uid` AS `id` FROM `ublack`
+	    							WHERE `to_uid`=#{userId}
+	    							)
+	    </if>
+	    -->
+	    <if test="postType!=null">AND `post_type`=#{postType} </if>
+	    <if test="startLongitude!=null">
+	   		<if test="endLongitude!=null">
+	    		<if test="startLatitude!=null">
+	    	    	<if test="endLatitude!=null">
+	    	    		AND (post_longitude BETWEEN #{startLongitude} AND #{endLongitude}) 
+	      				AND (post_latitude BETWEEN #{startLatitude} AND #{endLatitude})
+	    	    	</if>
+	    	    </if>
+	   		</if>
+	  	</if>
+	    <if test="beforeTime!=null">AND `post_time` &lt; #{beforeTime}</if> 
+	    ORDER BY `post_time` DESC
+	    <if test="size!=null">
+	        <if test="offset!=null">LIMIT #{size} OFFSET #{offset}</if>
+	    </if>
+	</select>
+	
+	<select id="queryByUserId" resultMap="postResultMap" >
+	    SELECT <include refid="postInfo"/> 
+	    	   ,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=`post`.`post_id`) AS `hasPraised`
+	    	   ,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=`post`.`post_id`) AS `hasCommented`
+	    FROM `post`
+	    WHERE `user_id`=#{userId}  AND `post_status`=0 
+		<if test="postType!=null">AND `post_type`=#{postType} </if>
+	    ORDER BY `post_time` DESC
+	    <if test="size!=null">
+	        <if test="offset!=null">LIMIT #{size} OFFSET #{offset}</if>
+	    </if>
+	</select>
+	
+	<select id="queryParticipantPosts" resultMap="postResultMap" >
+	    SELECT DISTINCT p.`post_id`,p.`post_title`,p.`post_content`,p.`post_picture`,p.`post_time`,p.`post_type`,
+	    	   p.`post_praise_number`,p.`post_comment_number`,p.`post_place`,p.`post_longitude`,
+	    	   p.`post_latitude`,p.`post_status`,p.`user_id`,p.`user_nickname`,p.`user_sex`,
+	    	   p.`user_head_portrait`,p.`user_credits`,p.`post_act_id`,p.`activity_content`, p.`city`
+	    	   ,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=p.`post_id`) AS `hasPraised`
+	    	   ,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=p.`post_id`) AS `hasCommented`
+	    FROM `post` p
+	    INNER JOIN 
+	    	(SELECT `post_id`, `comment_time` AS time FROM `pcomment` WHERE `user_id`=#{userId}
+	    	UNION
+	    	SELECT `post_id`, `praise_time` AS time  FROM `ppraise` WHERE `user_id`=#{userId}) o
+	    ON p.`post_id` = o.`post_id` 
+	    WHERE p.`user_id` != #{userId}  AND p.`post_status`=0
+		<if test="postType!=null">AND `post_type`=#{postType} </if>
+	    ORDER BY o.`time` DESC
+	    <if test="size!=null">
+	        <if test="offset!=null">LIMIT #{size} OFFSET #{offset}</if>
+	    </if>
+	</select>
+	
+	<select id="queryPostsOfMyAttentionUsers" resultMap="postResultMap" useCache="false" >
+	    SELECT DISTINCT p.`post_id`,p.`post_title`,p.`post_content`,p.`post_picture`,p.`post_time`,
+	    	   p.`post_praise_number`,p.`post_comment_number`,p.`post_place`,p.`post_longitude`,
+	    	   p.`post_latitude`,p.`post_status`,p.`user_id`,p.`user_nickname`,p.`user_sex`,
+	    	   p.`user_head_portrait`,p.`user_credits`,p.`post_act_id`,p.`activity_content`, p.`city`
+	    	   ,(SELECT COUNT(`ppraise`.`post_id`) FROM `ppraise` WHERE `ppraise`.`user_id`=#{userId} AND `ppraise`.`post_id`=p.`post_id`) AS `hasPraised`
+	    	   ,(SELECT CASE WHEN COUNT(`pcomment`.`user_id`)>0 THEN 1 ELSE 0 END FROM `pcomment` WHERE `pcomment`.`user_id`=#{userId} AND `pcomment`.`post_id`=p.`post_id`) AS `hasCommented`
+	    FROM `post` p
+	    WHERE p.`post_status`=0 AND 
+	    	p.`user_id` IN 
+	    	(SELECT `att_to_uid` FROM `attention` WHERE `att_from_uid`=#{userId})
+		<if test="postType!=null">AND `post_type`=#{postType} </if>
+	    ORDER BY p.`post_time` DESC
+	    <if test="size!=null">
+	        <if test="offset!=null">LIMIT #{size} OFFSET #{offset}</if>
+	    </if>
+	</select>
+	
+	<resultMap type="PostDO" id="postResultMap">
+	    <id column="post_id" property="postId"/>
+	    <result column="post_title" property="postTitle"/>
+	    <result column="post_content" property="postContent"/>
+	    <result column="post_picture" property="postPicture"/>
+	    <result column="post_time" property="postTime"/>
+	    <result column="post_type" property="postType"/>
+	    <result column="post_praise_number" property="postPraiseNumber"/>
+	    <result column="post_comment_number" property="postCommentNumber"/>
+	    <result column="post_place" property="postPlace"/>
+	    <result column="post_longitude" property="postLongitude"/>
+	    <result column="post_latitude" property="postLatitude"/>
+	    <result column="post_status" property="postStatus"/>
+	    <result column="user_id" property="userId"/>
+	    <result column="user_nickname" property="userNickname"/>
+	    <result column="user_sex" property="userSex"/>
+	    <result column="user_head_portrait" property="userHeadPortrait"/>
+	    <result column="user_credits" property="userCredits"/>
+	    <result column="post_act_id" property="postActId"/>
+	    <result column="activity_content" property="activityContent"/>
+	    <result column="city" property="city"/>
+	</resultMap>
+</mapper>

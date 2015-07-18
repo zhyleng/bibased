@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.UserDAO">
+    <cache />
+    
+	<insert id="insertUser" parameterType="UserDO" useGeneratedKeys="true" keyProperty="userID">
+    	INSERT INTO `user` (`phone_number`, `qq_number`, `wechat_number`, `weibo_number`, 
+    	`user_register_time`, `birthday`, `sex`, `password`, `job`, 
+    	 `personal_sign`, `voice`, `photo`, `location`, `nickname`, `head_portrait`,
+    	 `hobbies_book`, `hobbies_music`, `hobbies_movie`, `interest_hobbies`,`usually_appear_area`, 
+    	 `current_version`, `longitude`,`latitude`, `login_token`, `history_act_visible`, `user_credits`, 
+    	 `profession`, `hometown`, `school`, `company`, `activity_types`)
+    	VALUES (#{phoneNumber}, #{qqNumber}, #{wechatNumber}, #{weiboNumber}, SYSDATE(), #{birthday}, 
+    	#{sex}, #{password}, #{job}, #{personalSign}, #{voice}, #{photo}, #{location}, #{nickname},
+    	#{headPortrait}, #{hobbiesBook}, #{hobbiesMusic}, #{hobbiesMovie}, #{interestHobbies}, 
+    	#{usuallyAppearArea}, #{currentVersion}, #{longitude}, #{latitude}, #{loginToken}, #{historyActVisible}, 
+    	<choose>
+    	    <when test="userCredits==null">0</when>
+    	    <otherwise>#{userCredits}</otherwise>
+   	    </choose>
+   	    , #{profession}, #{hometown},#{school},#{company}, #{activityTypes})
+    </insert>
+    
+    <update id="updateUserInfo" parameterType="UserDO">
+    	UPDATE `user` SET 
+		<trim prefixOverrides=","><!-- 若开头为，则截掉 结尾截取可用suffixOverrides -->
+	    	<if test="birthday!=null">, `birthday`=#{birthday}</if>
+	    	<if test="personalSign!=null">, `personal_sign`=#{personalSign}</if>
+	    	<if test="voice!=null">, `voice`=#{voice}</if>
+	    	<if test="photo!=null">, `photo`=#{photo}</if>
+	    	<if test="location!=null">, `location`=#{location}</if>
+	    	<if test="nickname!=null">, `nickname`=#{nickname}</if>
+	    	<if test="headPortrait!=null">, `head_portrait`=#{headPortrait}</if>
+	    	<if test="interestHobbies!=null">, `interest_hobbies`=#{interestHobbies}</if>
+	    	<if test="hobbiesBook!=null">, `hobbies_book`=#{hobbiesBook}</if>
+	    	<if test="hobbiesMusic!=null">, `hobbies_music`=#{hobbiesMusic}</if>
+	    	<if test="hobbiesMovie!=null">, `hobbies_movie`=#{hobbiesMovie}</if>
+	    	<if test="usuallyAppearArea!=null">, `usually_appear_area`=#{usuallyAppearArea}</if>
+	    	<if test="currentVersion!=null">, `current_version`=#{currentVersion}</if>
+	    	<if test="longitude!=null and longitude!=0">, `longitude`=#{longitude}</if>
+	    	<if test="latitude!=null and latitude!=0">, `latitude`=#{latitude}</if>
+	    	<if test="loginToken!=null">, `login_token`=#{loginToken}</if>
+	    	<if test="deviceType!=null and deviceType!=0">, `device_type`=#{deviceType}</if>
+	    	<if test="userCredits!=null and userCredits!=0">, `user_credits`=#{userCredits}</if>
+	    	<if test="historyActVisible!=null">, `history_act_visible`=#{historyActVisible}</if>
+	    	<if test="userMissedNum!=null and userMissedNum!=0">, `user_missed_num`=#{userMissedNum}</if>
+	    	<if test="profession!=null">, `profession`=#{profession}</if>
+	    	<if test="trade!=null">, `trade`=#{trade}</if>
+	    	<if test="company!=null">, `company`=#{company}</if>
+	    	<if test="school!=null">, `school`=#{school}</if>
+	    	<if test="hometown!=null">, `hometown`=#{hometown}</if>
+	    	<if test="activityTypes!=null">, `activity_types`=#{activityTypes}</if>
+	    	<if test="deviceId!=null">, `push_device_id`=#{deviceId}</if>
+	    	<if test="city!=null">, `city`=#{city}</if>
+	    	WHERE `userID`=#{userID}
+    	</trim>
+    </update>
+    
+    <update id="updateAccount" >
+    	UPDATE `user` SET 
+	    <choose>
+	        <when test="type=='qq'">`qq_number`=#{account}</when>
+	        <when test="type=='weibo'">`weibo_number`=#{account}</when>
+	        <when test="type=='wechat'">`wechat_number`=#{account}</when>
+	    </choose>
+    	WHERE `userID`=#{userId}
+    </update>
+    
+    <update id="updatePasswordById" >
+    	UPDATE `user` SET `password`=#{password} WHERE  userID=#{userID}
+    </update>
+
+    <update id="updatePasswordByPhone" >
+    	UPDATE `user` SET `password`=#{password} WHERE phone_number=#{phone}
+    </update>
+
+    <update id="updateStatusById">
+    	UPDATE `user` SET `user_status`=#{status} WHERE userID=#{userID}
+    </update>    
+    
+    <update id="updateStatusByPhone" >
+    	UPDATE `user` SET `user_status`=#{status} WHERE phone_number=#{phone} AND password=#{password}
+    </update>
+    <update id="updateStatusByQQ" >
+    	UPDATE `user` SET `user_status`=#{status} WHERE qq_number=#{qq}
+    </update>
+    <update id="updateStatusByWeibo" >
+    	UPDATE `user` SET `user_status`=#{status} WHERE weibo_number=#{weibo}
+    </update>
+    <update id="updateStatusByWechat" >
+    	UPDATE `user` SET `user_status`=#{status} WHERE wechat_number=#{wechat}
+    </update>
+
+    <update id="updateStateById">
+    	UPDATE `user` SET `user_state`=#{state} WHERE userID=#{userID}
+    </update>    
+    
+    <update id="updateStateByPhone" >
+    	UPDATE `user` SET `user_state`=#{state} WHERE phone_number=#{phone}
+    </update>
+    
+    <update id="updatePushDeviceToNull">
+    	UPDATE `user` SET `device_type`=NULL WHERE userID = #{userID}
+    </update>
+    <update id="updateLocation">
+    	UPDATE `user` SET longitude=#{longitude}, latitude=#{latitude} 
+    	WHERE userID=#{userID}
+    </update>
+    
+    <select id="queryPasswordById" parameterType="_long" resultType="string">
+    	SELECT `password` FROM `user` WHERE userID=#{userID}
+    </select>
+    
+    <select id="queryIsExistsByPhone" resultType="boolean">
+    	SELECT COUNT(phone_number)  FROM  `user` WHERE phone_number=#{phone}
+    </select>
+    <select id="queryIsExistsByQQ" resultType="boolean">
+    	SELECT COUNT(qq_number)  FROM  `user` WHERE qq_number=#{qq}
+    </select>
+    <select id="queryIsExistsByWeibo" resultType="boolean">
+    	SELECT COUNT(weibo_number)  FROM  `user` WHERE weibo_number=#{weibo}
+    </select>
+    
+    <select id="queryIsMatchedByPhone" resultType="boolean">
+    	SELECT COUNT(phone_number) FROM `user` WHERE phone_number=#{phone} AND password=#{password}
+    </select>
+    
+    <select id="queryIsMatchedById" resultType="boolean">
+    	SELECT COUNT(userID) FROM `user` WHERE userID=#{userID} AND password=#{password}
+    </select>
+    
+    <select id="queryStateByPhone" resultType="int">
+    	SELECT user_state FROM `user` WHERE phone_number=#{phone}
+    </select>
+    <select id="queryStateByQQ" resultType="int">
+    	SELECT user_state FROM `user` WHERE qq_number=#{qq}
+    </select>
+    <select id="queryStateByWeibo" resultType="int">
+    	SELECT user_state FROM `user` WHERE weibo_number=#{weibo}
+    </select>
+    <select id="queryStateByWechat" resultType="int">
+    	SELECT user_state FROM `user` WHERE wechat_number=#{wechat}
+    </select>
+    
+    <select id="queryUserIdByPhone" resultType="_long">
+    	SELECT userID FROM `user` WHERE phone_number=#{phone}
+    </select>
+    <select id="queryUserIdByQQ" resultType="_long">
+    	SELECT userID FROM `user` WHERE qq_number=#{qq}
+    </select>
+    <select id="queryUserIdByWeibo" resultType="_long">
+    	SELECT userID FROM `user` WHERE weibo_number=#{weibo}
+    </select>
+    <select id="queryUserIdByWechat" resultType="_long">
+    	SELECT userID FROM `user` WHERE wechat_number=#{wechat}
+    </select>
+    
+    <select id="queryLoginTokenByUserId" resultType="string">
+    	SELECT login_token FROM `user` WHERE userID = #{userID}
+    </select>
+    <select id="queryDeviceType" resultType="int">
+    	SELECT `device_type` FROM `user` WHERE userID = #{userID}
+    </select>
+    <select id="queryDeviceId" resultType="string">
+    	SELECT `push_device_id` FROM `user` WHERE userID = #{userID}
+    </select>
+    <select id="queryByCity" resultType="long">
+    	SELECT `userID` FROM `user` WHERE city=#{city}
+    </select>
+    
+    <sql id="personalInfo">
+      	`userID`, `qq_number`, `wechat_number`, `weibo_number`, `user_register_time`,`birthday`,`sex`,`job`,`personal_sign`,`voice`,`photo`,
+   	   	`location`,`nickname`,`head_portrait`,`longitude`,`latitude`,
+   	   	`device_type`,`user_credits`,`history_act_visible`, `hobbies_book`, `hobbies_music`, 
+   	   	`hobbies_movie`, `interest_hobbies`, `usually_appear_area`, `user_missed_num`,
+   	   	`profession`,`trade`, `hometown`, `school`, `company`, `activity_types`,
+   	   	`n_participant_act`, `n_publish_act`, `n_reported`
+    </sql>
+    
+    <!-- 查询用户个人信息(可见) -->
+    <select id="queryById" parameterType="_long" resultMap="userResultMap">
+        select 
+        	<include refid="personalInfo"/>
+        FROM `view_user` where userID = #{userID}
+    </select>
+    <!-- 查询初友个人信息(可见) -->
+    <select id="queryFriendById" resultMap="userResultMap" useCache="false">
+        select <include refid="personalInfo"/>
+        	   <if test="userID!=null">
+        	       ,(SELECT COUNT(uid) FROM `ublack` WHERE `uid`=#{userID} AND to_uid=`view_user`.`userID` ) AS `hasPullBlack`
+        	       ,(SELECT COUNT(*) FROM `attention` WHERE `att_from_uid`=#{userID} AND `att_to_uid`=#{friendId}) AS `hasAttentioned`
+        	       ,(SELECT COUNT(uid) FROM `ureport` WHERE uid=#{userID} AND to_uid=#{friendId}) AS `hasReported`
+        	   </if>
+        FROM `view_user` where `userID` = #{friendId}
+    </select>
+    
+    <select id="queryByPhone" parameterType="string" resultMap="userResultMap" >
+    	SELECT * FROM `user` WHERE phone_number=#{phone}
+    </select>
+    
+    <select id="queryCurrentVersion" parameterType="_long" resultType="string" >
+    	SELECT `current_version` FROM `user` WHERE userID=#{userId}
+    </select>
+    
+    <select id="queryPartById" parameterType="_long" resultMap="userResultMap">
+    	SELECT userID, nickname,head_portrait,birthday,sex,user_credits FROM `user` WHERE  userID = #{userID}
+    </select>
+    
+    <select id="queryAccountInfo" parameterType="_long" resultMap="userResultMap">
+    	SELECT `userID`, `qq_number`, `wechat_number`, `weibo_number`,`phone_number` FROM `user` WHERE  userID = #{userID}
+    </select>
+    
+    <select id="queryPartByIds" resultMap="userResultMap">
+    	SELECT userID,nickname,head_portrait,sex,userID FROM `user` 
+    	WHERE  userID IN <foreach collection="userIds" close=")" open="(" item="userId" separator=",">#{userId}</foreach>
+    </select>
+    
+    <resultMap id="userResultMap" type="UserDO" >
+    	<!-- 通过constructor标签指定构建对象时调用的构造方法是哪个 idArg是传入的参数 一定要指定参数的类型 -->
+    	<!-- 这种方法 按参数排序 且要指定每个参数的类型 -->
+    	<!-- <constructor><idArg column="userID" javaType="_int"/></constructor> -->
+    	<id column="userID" property="userID"  />
+        <result column="phone_number" property="phoneNumber" />
+        <result column="qq_number" property="qqNumber" />
+        <result column="wechat_number" property="wechatNumber" />
+        <result column="weibo_number" property="weiboNumber" />
+        <result column="user_register_time" property="userRegisterTime" />
+        <result column="birthday" property="birthday" />
+        <result column="user_status" property="userStatus" />
+        <result column="sex" property="sex" />
+       <!--  <result column="password" property="password" /> -->
+        <result column="job" property="job" />
+        <result column="personal_sign" property="personalSign" />
+        <result column="voice" property="voice" />
+        <result column="photo" property="photo" />
+        <result column="location" property="location" />
+        <result column="nickname" property="nickname" />
+        <result column="head_portrait" property="headPortrait" />
+        <result column="interest_hobbies" property="interestHobbies" />
+        <result column="hobbies_book" property="hobbiesBook" />
+        <result column="hobbies_music" property="hobbiesMusic" />
+        <result column="hobbies_movie" property="hobbiesMovie" />
+        <result column="usually_appear_area" property="usuallyAppearArea" />
+        <result column="user_state" property="userState" />
+        <result column="current_version" property="currentVersion" />
+        <result column="longitude" property="longitude" />
+        <result column="latitude" property="latitude" />
+        <result column="login_token" property="loginToken" />
+        <result column="device_type" property="deviceType" />
+        <result column="user_credits" property="userCredits" />
+        <result column="history_act_visible" property="historyActVisible" />
+        <result column="user_missed_num" property="userMissedNum" />
+        <result column="profession" property="profession" />
+        <result column="trade" property="trade" />
+        <result column="company" property="company" />
+        <result column="school" property="school" />
+        <result column="hometown" property="hometown" />
+        <result column="activity_types" property="activityTypes" />
+        <result column="n_participant_act" property="nParticipantAct" />
+        <result column="n_publish_act" property="nPublishAct" />
+        <result column="n_reported" property="nReported" />
+        <result column="push_device_id" property="deviceId" />
+        <result column="city" property="city" />
+    </resultMap>
+    
+    <!-- <parameterMap type="UserDO" id="userParameterMap">
+    	<parameter property="userID" resultMap="userID"/>
+    	<parameter property="phoneNumber" resultMap="phone_number"/>
+    	<parameter property="qqNumber" resultMap="qq_number"/>
+    	<parameter property="weiboNumber" resultMap="weibo_number"/>
+    	<parameter property="pulledBlackNumber" resultMap="pulled_black_number"/>
+    	<parameter property="height" resultMap="height"/>
+    	<parameter property="weight" resultMap="weight"/>
+    	<parameter property="userRegisterTime" resultMap="user_register_time"/>
+    	<parameter property="birthday" resultMap="birthday"/>
+    	<parameter property="userStatus" resultMap="user_status"/>
+    	<parameter property="sex" resultMap="sex"/>
+    	<parameter property="password" resultMap="password"/>
+    	<parameter property="job" resultMap="job"/>
+    	<parameter property="personalSignature" resultMap="personal_signature"/>
+    	<parameter property="voice" resultMap="voice"/>
+    	<parameter property="photo" resultMap="photo"/>
+    	<parameter property="units" resultMap="units"/>
+    	<parameter property="location" resultMap="location"/>
+    	<parameter property="nickname" resultMap="nickname"/>
+    	<parameter property="headPortrait" resultMap="head_portrait"/>
+    	<parameter property="emotionState" resultMap="emotion_state"/>
+    	<parameter property="interestHobbies" resultMap="interest_hobbies"/>
+    	<parameter property="usuallyAppearArea" resultMap="usually_appear_area"/>
+    	<parameter property="userState" resultMap="user_state"/>
+    	<parameter property="constellation" resultMap="constellation"/>
+    </parameterMap> -->
+</mapper>

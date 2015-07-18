@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.ACommentDAO">
+    <cache />
+    
+	<insert id="insertComment" parameterType="AComment" useGeneratedKeys="true" keyProperty="commentID">
+		INSERT INTO `acomment` (`activityID`, `reviewerID`, `comment_floor`, `comment_time`, 
+		`comment_content`, `reviewer_nickname`, `reviewer_head_portrait`) 
+		VALUES (#{activityID}, #{reviewerID}, #{commentFloor}, SYSDATE(), #{commentContent},
+		 #{reviewerNickname}, #{reviewerHeadPortrait});	
+	</insert>
+	
+	<delete id="deleteById" parameterType="_long">
+		DELETE FORM `acomment` WHRER commentID=#{commentID}
+	</delete>
+	
+	<update id="updateStatusById">
+		UPDATE `acomment` SET comment_status=#{status} WHERE commentID=#{commentID}
+	</update>
+	
+	<update id="updateUserInfoByUserId">
+		UPDATE `acomment` 
+		<set>
+			<if test="reviewerNickname!=null">reviewer_nickname=#{reviewerNickname}, </if>
+			<if test="reviewerHeadPortrait!=null">reviewer_head_portrait=#{reviewerHeadPortrait} </if>
+		</set> 
+		WHERE reviewerID=#{reviewerID}
+	</update>
+	
+	<select id="queryStatusById" parameterType="_long" resultType="int">
+		SELECT comment_status  FROM `acomment` WHERE commentID=#{commentID}
+	</select>
+	
+	<select id="queryLatestFloor" parameterType="_long" resultType="int">
+		SELECT MAX(comment_floor) FROM `acomment` WHERE activityID=#{activityID}
+	</select>
+	
+	<select id="queryActivityId" parameterType="_long" resultType="_long">
+		SELECT activityID FROM `acomment`
+		WHERE  commentID=#{commentID}
+	</select>
+	<select id="queryUserId" parameterType="_long" resultType="_long">
+		SELECT reviewerID FROM `acomment`
+		WHERE  commentID=#{commentID}
+	</select>
+	
+	<select id="queryById" parameterType="_long" resultMap="commentResultMap">
+		SELECT * FROM `acomment` 
+		WHERE  commentID=#{commentID}
+	</select>
+
+	<select id="queryByActivityId" resultMap="commentResultMap">
+		SELECT * FROM `acomment` 
+		WHERE activityID=#{activityID} AND comment_status=#{status}
+		<if test="beforeFloor!=0"> AND comment_floor &lt; #{comment_floor} </if>
+		ORDER BY comment_floor DESC
+		<if test="size!=0"> LIMIT #{size} OFFSET #{offset} </if>
+	</select>
+	
+	<resultMap id="commentResultMap" type="AComment">
+		<id column="commentID" property="commentID" />
+		<result column="activityID" property="activityID" />
+		<result column="reviewerID" property="reviewerID" />
+		<result column="comment_floor" property="commentFloor" />
+		<result column="comment_time" property="commentTime" />
+		<result column="comment_content" property="commentContent" />
+		<result column="comment_status" property="commentStatus" />
+		<result column="reviewer_nickname" property="reviewerNickname" />
+		<result column="reviewer_head_portrait" property="reviewerHeadPortrait" />
+	</resultMap>
+</mapper>

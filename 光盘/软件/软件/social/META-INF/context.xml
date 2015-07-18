@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- don't auto reload web application -->
+<Context reloadable="false"/>
+<!-- 注：在更新客户端版本是会更改web.xml文件中的版本号 -->

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hichujian.dao.InterestDAO">
+    <cache></cache>
+    <insert id="insert" parameterType="Interest">
+    	INSERT INTO `interest` (`i_user_id`, `i_act_id`, i_has_joined, `i_time`) 
+    	VALUES (#{i_user_id}, #{i_act_id}, #{i_has_joined}, SYSDATE());
+    </insert>
+    
+    <!-- 返回值类型为boolean 时、只有结果为1是转为true、其他值一律转为false -->
+    <select id="queryIsExists" resultType="_boolean" useCache="false">
+        SELECT COUNT(*) FROM `interest` 
+        WHERE `i_user_id`=#{i_user_id} AND `i_act_id`=#{i_act_id}
+    </select>
+    
+    <select id="queryJoinChatStatus" resultType="string">
+        SELECT i_has_joined FROM `interest` 
+        WHERE `i_user_id`=#{i_user_id} AND `i_act_id`=#{i_act_id}
+    </select>
+    
+    <update id="updateHasJoined" >
+       UPDATE `interest` SET `i_has_joined`=#{i_has_joined} 
+       WHERE `i_user_id`=#{i_user_id} AND `i_act_id`=#{i_act_id}
+    </update>
+    
+    <delete id="delete">
+        DELETE FROM `interest` 
+        WHERE `i_user_id`=#{i_user_id} AND `i_act_id`=#{i_act_id}
+    </delete>
+    
+    <select id="queryIdsAndHeadsByActivityId" resultMap="userResultMap" >
+        SELECT i.`i_user_id`, u.`head_portrait`, i.`i_time`
+        FROM (SELECT `i_user_id`,`i_time` FROM `interest` WHERE `i_act_id` = #{activityId}) i 
+        INNER JOIN `user` u ON u.`userID`=i.`i_user_id`
+        ORDER BY i.`i_time` DESC
+       	<if test="offset!=null">
+       	    <if test="size!=null">
+				LIMIT #{size} OFFSET #{offset}       	        
+       	    </if>
+       	</if>
+    </select>
+    
+    <select id="queryInterestedUsersOfActivity" resultMap="userResultMap" useCache="false">
+        SELECT 
+        i.`i_user_id`,i.`i_act_id`, i.`i_time`, i.`i_has_joined`,
+        u.`sex`, u.`birthday`, u.`nickname`, u.`head_portrait`, u.`user_credits`,u.`personal_sign`
+        <if test="userID!=null">
+   	       ,(SELECT COUNT(uid) FROM `ublack` WHERE `uid`=#{userID} AND to_uid= u.`userID` ) AS `hasPullBlack`
+   	       ,(SELECT COUNT(*) FROM `attention` WHERE `att_from_uid`=#{userID} AND `att_to_uid`= u.`userID`) AS `hasAttentioned`
+   	       ,(SELECT COUNT(*) FROM `attention` WHERE `att_from_uid`=u.`userID` AND `att_to_uid`= #{userID}) AS `hasBeAttentioned`
+   	       ,(SELECT COUNT(uid) FROM `ureport` WHERE uid=#{userID} AND to_uid= u.`userID`) AS `hasReported`
+        </if>
+        FROM (SELECT `i_user_id`, `i_time`, `i_has_joined`, `i_act_id` FROM `interest` WHERE `i_act_id` = #{activityId}) i 
+        INNER JOIN `user` u ON u.`userID`=i.`i_user_id`
+        ORDER BY i.`i_time` DESC
+       	<if test="offset!=null">
+       	    <if test="size!=null">
+				LIMIT #{size} OFFSET #{offset}       	        
+       	    </if>
+       	</if>
+    </select>
+    
+    <select id="queryInterestedActivitysOfUser" resultMap="activityResultMap" >
+        SELECT 
+        i.`i_user_id`,i.`i_act_id`, i.`i_time`, i.`i_has_joined`,
+		a.`activityID`, a.`activity_type`, a.`activity_content`, a.`activity_time`, a.`activity_longitude`, a.`activity_latitude`, a.`city`,
+		a.`group_chat_id`,a.`invited_object_sex`,a.`activity_place`, a.`userID`, a.`nickname`, a.`head_portrait`, a.`sex`, a.`birthday`,a.`activity_picture`,
+		a.`sign_up_number`, a.`comment_number`, a.`report_number`,a.`activity_explain`, a.`activity_past_time` , a.`create_time`, a.`landmark`, a.`activity_delete_status`, 
+		a.`accept_necessary`, a.`user_credits`, a.`activity_category`,a.`activity_praise_number`, a.`expected_number`,a.`interested_number`,a.`act_invited_status`
+		FROM `view_activity_expire` a INNER JOIN 
+		(SELECT `i_user_id`,`i_time`, `i_has_joined`, `i_act_id` FROM `interest` WHERE `i_user_id` = #{userId}) i 
+		ON a.`activityID`=i.`i_act_id`
+		ORDER BY
+			(CASE WHEN (`activity_delete_status`=0) and (`activity_past_time` > SYSDATE()) THEN i.`i_time` ELSE '2000-00-00 00:00:00' END) DESC,
+	        i.`i_time` DESC
+       	<if test="offset!=null">
+       	    <if test="size!=null">
+				LIMIT #{size} OFFSET #{offset}       	        
+       	    </if>
+       	</if>
+    </select>
+    
+    <resultMap id="activityResultMap" type="Interest">
+        <id column="i_user_id" property="i_user_id"/>
+        <id column="i_act_id" property="i_act_id"/>
+        <id column="i_has_joined" property="i_has_joined"/>
+        <id column="i_time" property="i_time"/>
+		<association property="activity" javaType="ActivityDO">
+			<id column="activityID" property="activityID"/>
+    	<result column="activity_type" property="activityType"/>
+    	<result column="activity_content" property="activityContent"/>
+    	<result column="invited_object_sex" property="invitedObjectSex"/>
+    	<result column="activity_explain" property="activityExplain"/>
+    	<result column="expected_number" property="expectedNumber"/>
+    	<result column="activity_time" property="activityTime"/>
+    	<result column="activity_longitude" property="activityLongitude"/>
+    	<result column="activity_latitude" property="activityLatitude"/>
+    	<result column="activity_place" property="activityPlace"/>
+    	<result column="userID" property="userID"/>
+    	<result column="nickname" property="nickname"/>
+    	<result column="head_portrait" property="headPortrait"/>
+    	<result column="sex" property="sex"/>
+    	<result column="birthday" property="birthday"/>
+    	<result column="create_time" property="createTime"/>
+    	<result column="sign_up_number" property="signUpNumber"/>
+    	<result column="comment_number" property="commentNumber"/>
+    	<result column="report_number" property="reportNumber"/>
+    	<result column="activity_past_time" property="activityPastTime"/>
+    	<result column="activity_picture" property="activityPicture"/>
+    	<result column="landmark" property="landmark"/>
+    	<result column="accept_necessary" property="acceptNecessary"/>
+    	<result column="group_chat_id" property="groupChatId"/>
+    	<result column="user_credits" property="userCredits"/>
+    	<result column="activity_category" property="activityCategory"/>
+    	<result column="activity_praise_number" property="activityPraiseNumber"/>
+    	<result column="act_invited_status" property="actInvitedStatus"/>
+    	<result column="activity_delete_status" property="activityDeleteStatus"/>
+    	<result column="city" property="city"/>
+    	<result column="has_interested" property="hasInterested"/>
+    	<result column="has_reported" property="hasReported"/>
+    	<result column="interested_number" property="interestedNumber"/>
+		</association>
+	</resultMap>
+	
+    <resultMap id="userResultMap" type="Interest">
+        <id column="i_user_id" property="i_user_id"/>
+        <id column="i_act_id" property="i_act_id"/>
+        <id column="i_has_joined" property="i_has_joined"/>
+        <id column="i_time" property="i_time"/>
+		<association property="user" javaType="UserDO">
+			<id column="i_user_id" property="userID"/>
+			<result column="sex" property="sex"/>
+			<result column="birthday" property="birthday"/>
+			<result column="nickname" property="nickname"/>
+			<result column="head_portrait" property="headPortrait"/>
+			<result column="user_credits" property="userCredits"/>
+			<result column="personal_sign" property="personalSign"/>
+			<result column="hasPullBlack" property="hasPullBlack"/>
+			<result column="hasAttentioned" property="hasAttentioned"/>
+			<result column="hasReported" property="hasReported"/>
+			<result column="hasBeAttentioned" property="hasBeAttentioned"/>
+		</association>
+	</resultMap>
+</mapper>
